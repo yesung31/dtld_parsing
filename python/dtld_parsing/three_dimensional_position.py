@@ -1,10 +1,10 @@
 import math
+from typing import Tuple
 
 import cv2
 import numpy as np
-from dtld_parsing.calibration import CalibrationData
 
-from typing import Tuple
+from .calibration import CalibrationData
 
 __author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
 __maintainer__ = "Julian Mueller"
@@ -16,7 +16,9 @@ class ThreeDPosition(object):
     Three dimensional position with respect to a defined frame_id.
     """
 
-    def __init__(self, x: float, y: float, z: float, frame_id: str = "stereo_left"):
+    def __init__(
+        self, x: float, y: float, z: float, frame_id: str = "stereo_left"
+    ):
         self._x = x
         self._y = y
         self._z = z
@@ -78,7 +80,15 @@ class ThreeDimensionalPosition(object):
             x, y, width, height in unrectified coordinates
         """
         # not rectified coordinates
-        pt_distorted = np.array([[float(x), float(y)], [float(x + width), float(y + height),],])
+        pt_distorted = np.array(
+            [
+                [float(x), float(y)],
+                [
+                    float(x + width),
+                    float(y + height),
+                ],
+            ]
+        )
         pt_distorted = pt_distorted[:, np.newaxis, :]
 
         # rectify points
@@ -105,7 +115,14 @@ class ThreeDimensionalPosition(object):
             int(round(h_out / float(self._binning_y))),
         )
 
-    def determine_disparity(self, x: int, y: int, width: int, height: int, disparity_image: np.ndarray) -> float:
+    def determine_disparity(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        disparity_image: np.ndarray,
+    ) -> float:
         """
         Calculates disparity from unrectified coordinates using calibration matrices and disparity image input.
 
@@ -127,7 +144,12 @@ class ThreeDimensionalPosition(object):
         return np.nanmedian(disparity_crop)
 
     def determine_three_dimensional_position(
-        self, x: int, y: int, width: int, height: int, disparity_image: np.ndarray
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        disparity_image: np.ndarray,
     ) -> ThreeDPosition:
         """
         Calculates 3d position from rectified coordinates using calibration matrices and disparity image input.
@@ -142,7 +164,9 @@ class ThreeDimensionalPosition(object):
         Returns:
             ThreeDPosition: ThreeDPosition
         """
-        x_u, y_u, width_u, height_u = self.unrectify_rectangle(x=x, y=y, width=width, height=height)
+        x_u, y_u, width_u, height_u = self.unrectify_rectangle(
+            x=x, y=y, width=width, height=height
+        )
 
         disparity = self.determine_disparity(
             x=x_u - int(round(self._roi_offset_x / self._binning_x)),
@@ -154,12 +178,16 @@ class ThreeDimensionalPosition(object):
 
         # all values inside bbox are nan --> no depth
         if disparity == 0.0 or math.isnan(disparity):
-            return ThreeDPosition(x=-1.0, y=-1.0, z=-1.0, frame_id="stereo_left")
+            disparity = 0.0001
+            # return ThreeDPosition(
+            #     x=-1.0, y=-1.0, z=-1.0, frame_id="stereo_left"
+            # )
 
-        return self.twod_point_to_threed_from_disparity(x=x + width / 2.0, y=y + height / 2.0, disparity=disparity)
+        return self.twod_point_to_threed_from_disparity(
+            x=x + width / 2.0, y=y + height / 2.0, disparity=disparity
+        )
 
     def twod_point_to_threed_from_disparity(self, x, y, disparity):
-
         # get calibration values
         left_fx = self._calibration_left.intrinsic_calibration.fx
         left_fy = self._calibration_left.intrinsic_calibration.fy
@@ -175,10 +203,13 @@ class ThreeDimensionalPosition(object):
         # normalize
         w = -1.0 * self._binning_x * left_fy * disparity
 
-        return ThreeDPosition(x=x_world / w, y=y_world / w, z=z_world / w, frame_id="stereo_left")
+        return ThreeDPosition(
+            x=x_world / w, y=y_world / w, z=z_world / w, frame_id="stereo_left"
+        )
 
-    def twod_point_to_threed_from_depth(self, x: int, y: int, depth: float) -> float:
-
+    def twod_point_to_threed_from_depth(
+        self, x: int, y: int, depth: float
+    ) -> float:
         disparity = self.depth_to_disparity(depth)
         return self.twod_point_to_threed_from_disparity(x, y, disparity)
 
@@ -225,7 +256,11 @@ class ThreeDimensionalPosition(object):
         r_vec = np.array([0.0, 0.0, 0.0])
 
         # world corner points of object (float object assumption)
-        world_points = np.array([[x, y, z],])
+        world_points = np.array(
+            [
+                [x, y, z],
+            ]
+        )
 
         # project world points on image plane
         image_points = cv2.projectPoints(

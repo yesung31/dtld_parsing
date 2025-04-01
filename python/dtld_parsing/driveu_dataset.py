@@ -6,9 +6,9 @@ import logging
 import os
 import sys
 
+import cv2
 import numpy as np
 
-import cv2
 from dtld_parsing.calibration import CalibrationData
 from dtld_parsing.vehicle_data import VehicleData
 
@@ -124,14 +124,21 @@ class DriveuImage:
         """
         # Parse images
         if data_base_dir != "":
-            inds = [i for i, c in enumerate(image_dict["image_path"]) if c == "/"]
-            self.file_path = os.path.join(data_base_dir,
-                                          image_dict["image_path"][inds[-4]:].strip("/"))
             inds = [
-                i for i, c in enumerate(image_dict["disparity_image_path"]) if c == "/"
+                i for i, c in enumerate(image_dict["image_path"]) if c == "/"
             ]
-            self.disp_file_path = os.path.join(data_base_dir,
-                                        image_dict["disparity_image_path"][inds[-4]:].strip("/"))
+            self.file_path = os.path.join(
+                data_base_dir, image_dict["image_path"][inds[-4] :].strip("/")
+            )
+            inds = [
+                i
+                for i, c in enumerate(image_dict["disparity_image_path"])
+                if c == "/"
+            ]
+            self.disp_file_path = os.path.join(
+                data_base_dir,
+                image_dict["disparity_image_path"][inds[-4] :].strip("/"),
+            )
 
         else:
             self.file_path = image_dict["image_path"]
@@ -166,7 +173,11 @@ class DriveuImage:
             return True, img
 
         else:
-            logging.error("Image {} not found. Please check image file paths!".format(self.file_path))
+            logging.error(
+                "Image {} not found. Please check image file paths!".format(
+                    self.file_path
+                )
+            )
             sys.exit(1)
             return False, np.array()
 
@@ -206,7 +217,11 @@ class DriveuImage:
         if os.path.isfile(self.disp_file_path):
             img = cv2.imread(self.disp_file_path, cv2.IMREAD_UNCHANGED)
         else:
-            logging.info("Disparity Image {} not found. Please check image file paths!".format(self.disp_file_path))
+            logging.info(
+                "Disparity Image {} not found. Please check image file paths!".format(
+                    self.disp_file_path
+                )
+            )
             sys.exit(1)
             return None
 
@@ -257,10 +272,11 @@ class DriveuImage:
             # not rectified coordinates
             pt_distorted = np.array(
                 [
-                    [float(labels.x),
-                     float(labels.y)],
-                    [float(labels.x + labels.width),
-                     float(labels.y + labels.height)],
+                    [float(labels.x), float(labels.y)],
+                    [
+                        float(labels.x + labels.width),
+                        float(labels.y + labels.height),
+                    ],
                 ]
             )
             pt_distorted = pt_distorted[:, np.newaxis, :]
@@ -313,16 +329,25 @@ class DriveuDatabase:
         if os.path.exists(self.file_path) is not None:
             label_file_extension = os.path.splitext(self.file_path)[1]
             if label_file_extension == ".json":
-                logging.info("Opening DriveuDatabase from file: {}"
-                            .format(self.file_path))
+                logging.info(
+                    "Opening DriveuDatabase from file: {}".format(
+                        self.file_path
+                    )
+                )
                 with open(self.file_path, "r") as fp:
                     images = json.load(fp)
             elif label_file_extension == ".yml":
-                logging.exception("Yaml support is deprecated. Either use the new .json label files (from download URL received after registration) or checkout <git checkout v1.0> to parse yaml")
+                logging.exception(
+                    "Yaml support is deprecated. Either use the new .json label files (from download URL received after registration) or checkout <git checkout v1.0> to parse yaml"
+                )
                 sys.exit(1)
                 return False
             else:
-                logging.exception("Label file with extension {} not supported. Please use json!".format(label_file_extension))
+                logging.exception(
+                    "Label file with extension {} not supported. Please use json!".format(
+                        label_file_extension
+                    )
+                )
                 sys.exit(1)
                 return False
         else:

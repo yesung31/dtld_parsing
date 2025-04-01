@@ -4,8 +4,8 @@ __author__ = "Andreas Fregin, Julian Mueller and Klaus Dietmayer"
 __maintainer__ = "Julian Mueller"
 __email__ = "julian.mu.mueller@daimler.com"
 
-import yaml
 import numpy as np
+import yaml
 
 
 class IntrinsicCalibration:
@@ -246,7 +246,7 @@ class CalibrationData:
         with open(path) as infile:
             for i in range(skip_lines):
                 infile.readline()
-            data = yaml.load(infile)
+            data = yaml.safe_load(infile)
             matrix = np.reshape(data["data"], (data["rows"], data["cols"]))
 
         return matrix
